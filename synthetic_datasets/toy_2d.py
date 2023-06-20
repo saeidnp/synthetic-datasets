@@ -24,6 +24,11 @@ import sklearn.datasets
 import numpy as np
 from torch.utils.data import Dataset
 from common_utils.random import RNG
+from common_utils.misc import get_register_fn
+
+
+DATASETS = {}
+register_dataset = get_register_fn(DATASETS)
 
 
 class ToyDatasetBase(Dataset):
@@ -40,6 +45,7 @@ class ToyDatasetBase(Dataset):
         return self.data[index]
 
 
+@register_dataset(name="swiss_roll")
 class SwissRoll(ToyDatasetBase):
     def setup_data(self, n_samples, noise=1.0):
         data = sklearn.datasets.make_swiss_roll(n_samples=n_samples, noise=noise)[0]
@@ -48,6 +54,7 @@ class SwissRoll(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="circle")
 class Circle(ToyDatasetBase):
     def setup_data(self, n_samples, noise=0.08):
         data = sklearn.datasets.make_circles(n_samples=100000, noise=0.08)[0]
@@ -56,6 +63,7 @@ class Circle(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="rings")
 class Rings(ToyDatasetBase):
     def setup_data(self, n_samples):
         n_samples4 = n_samples3 = n_samples2 = n_samples // 4
@@ -95,6 +103,7 @@ class Rings(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="moons")
 class Moons(ToyDatasetBase):
     def setup_data(self, n_samples):
         data = sklearn.datasets.make_moons(n_samples=n_samples, noise=0.1)[0]
@@ -104,6 +113,7 @@ class Moons(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="8gaussians")
 class EightGaussians(ToyDatasetBase):
     def setup_data(self, n_samples, scale=1.0):
         centers = [
@@ -131,6 +141,7 @@ class EightGaussians(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="pinwheel")
 class PinWheel(ToyDatasetBase):
     def setup_data(self, n_samples):
         radial_std = 0.3
@@ -157,6 +168,7 @@ class PinWheel(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="2spirals")
 class TwoSpirals(ToyDatasetBase):
     def setup_data(self, n_samples):
         n = np.sqrt(np.random.rand(n_samples // 2, 1)) * 540 * (2 * np.pi) / 360
@@ -167,6 +179,7 @@ class TwoSpirals(ToyDatasetBase):
         self.data = x / 4
 
 
+@register_dataset(name="checkerboard")
 class Checkerboard(ToyDatasetBase):
     def setup_data(self, n_samples):
         x1 = np.random.rand(n_samples) * 4 - 2
@@ -176,6 +189,7 @@ class Checkerboard(ToyDatasetBase):
         self.data = data
 
 
+@register_dataset(name="line")
 class Line(ToyDatasetBase):
     def setup_data(self, n_samples):
         x = np.random.rand(n_samples) * 2 - 1
@@ -183,6 +197,7 @@ class Line(ToyDatasetBase):
         self.data = np.stack((x, y), 1)
 
 
+@register_dataset(name="sine")
 class Sine(ToyDatasetBase):
     def setup_data(self, n_samples):
         x = np.random.rand(n_samples) * 2 - 1
@@ -190,20 +205,8 @@ class Sine(ToyDatasetBase):
         self.data = np.stack((x, y), 1)
 
 
-dataset_classes = {
-    "8gaussians": EightGaussians,
-    "pinwheel": PinWheel,
-    "2spirals": TwoSpirals,
-    "checkerboard": Checkerboard,
-    "line": Line,
-    "sine": Sine,
-    "swissroll": SwissRoll,
-    "moons": Moons,
-}
-
-
 def get_dataset(dataset_name, n_samples, seed=123, **kwargs):
     dataset_name = dataset_name.lower()
-    assert dataset_name in dataset_classes, f"Unknown dataset: {dataset_name}"
+    assert dataset_name in DATASETS, f"Unknown dataset: {dataset_name}"
     with RNG(seed):
-        return dataset_classes[dataset_name](n_samples, **kwargs)
+        return DATASETS[dataset_name](n_samples, **kwargs)
